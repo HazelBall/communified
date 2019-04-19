@@ -1,0 +1,150 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Communified - Dashboard</title>
+		<link rel = "stylesheet" type = "text/css" href = "https://cdn.jsdelivr.net/gh/HunterBall/fresh.css@0.1.4/fresh.min.css">
+		<style>
+			:root {
+				--color-accent: #2e7aea;
+				--text-accent: #ffffff;
+			}
+		</style>
+	</head>
+	<body>
+		<div class = "nav side">
+			<a class = "title">Communified</a>
+			<a class = "item active displayName"></a>
+			<hr>
+			<a class = "item active" href = "home.html">Dashboard</a>
+			<a class = "item" href = "user.html">Profile</a>
+			<a class = "item" href = "messages.html">Messages</a>
+			<hr>
+			<a class = "item" href = "" onclick = "logOut();">Log Out</a>
+		</div>
+		<div class = "main nav-side">
+			<div class = "header primary">
+				<h2><span class = "displayName"></span>'s Dashboard</h2>
+				<hr><br>
+			</div>
+			<div class = "container classesJoined">
+				<h3>Joined Classes</h3>
+				<br>
+				<div class = "card">
+					<div class = "header">
+						<h4>Join A Class</h4>
+					</div>
+					<div class = "content">
+						<div class = "columns">
+							<input style = "font-size: 1rem; border: 1px solid black; padding: 2.5px" type="text" class="column classNewCode" placeholder="Class Code">
+							<button style = "font-size: 1rem; border: 1px solid black; padding: 2.5px" onclick="joinClass()" class=" column classNewSubmit">Submit</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div style = "position: relative" class = "container classesCreated">
+				<a style = "font-size: 20px; font-weight: 700; position: absolute; top: 30px; left: 50px; background-color: #2e7aea; color: white; padding: 10px; line-height: 1; vertical-align: middle; text-decoration: none; border-radius: 500px;" href = "createClass.html">&#xff0b;</a>
+				<h3>My Classes</h3>
+				<br>
+			</div>
+			<div class = "container">
+			</div>
+			<div class = "footer">
+				<h6>Copyright &copy; 2019, Fractyl Development LLC</h6>
+			</div>
+		</div>
+		<script src="https://www.gstatic.com/firebasejs/5.7.1/firebase.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script>
+			// Initialize Firebase
+			var config = {
+				apiKey: "AIzaSyA74RowluDSPHcGfKclwIzbHGlrtYHVJ2k",
+				authDomain: "communified-web.firebaseapp.com",
+				databaseURL: "https://communified-web.firebaseio.com",
+				projectId: "communified-web",
+				storageBucket: "",
+				messagingSenderId: "255197968272"
+			};
+			firebase.initializeApp(config);
+			
+			var userName = null;
+			const db = firebase.firestore();
+			const settings = {timestampsInSnapshots: true};
+			db.settings(settings);
+			var userDb = null;
+			var userId = null;
+			var classDb = db.collection('classes');
+			
+			// Auth State
+			firebase.auth().onAuthStateChanged(firebaseUser => {
+				if(firebaseUser) {
+					console.log(firebaseUser);
+					userDb = db.collection('users').doc(firebaseUser.uid);
+					userDb.get().then(function(doc) {
+						if(doc) {
+							var data = doc.data();
+							userName = data.userName;
+							$('.displayName').text(userName);
+						}
+					});
+					userId = firebaseUser.uid;
+					getClasses();
+				} else {
+					window.location.href = "signup.html";
+				}
+			});
+			
+			// Get Classes
+			function getClasses() {
+				var classQuery = classDb.where("students", "array-contains", userId);
+				classQuery.get().then(function(querySnapshot) {
+					if (querySnapshot.empty) {
+						$('.classesJoined').append('<p>You have not joined any classes! Join one now to get new assignments, lessons, and discussions.</p>')
+					} else {
+						querySnapshot.forEach(function (doc) {
+							var data = doc.data();
+							var newClass = '<div class = "card clickable"><div class = "content"><h5 class = "title">' + data.name + '</h5><p><em>' + data.desc + '</em></p><a class = "clicker" href = "class.html?id=' + doc.id + '"></a></div></div>';
+							$('.classesJoined').append(newClass);
+						});
+					}
+				});
+				var classQuery = classDb.where("teachers", "array-contains", userId);
+				classQuery.get().then(function(querySnapshot) {
+					if (querySnapshot.empty) {
+						$('.classesCreated').append('<p>You have not created any classes. Create one now to assign, teach, and discuss with your students.</p>')
+					} else {
+						querySnapshot.forEach(function (doc) {
+							var data = doc.data();
+							var newClass = '<div class = "card clickable"><div class = "content"><h5 class = "title">' + data.name + '</h5><p><em>' + data.desc + '</em></p><a class = "clicker" href = "class.html?id=' + doc.id + '"></a></div></div>';
+							$('.classesCreated').append(newClass);
+						});
+					}
+				});
+			}
+			// Join class
+			function joinClass() {
+				var classCode = $('.classNewCode').val();
+				if(classCode == null) {
+					window.alert("Please Enter a Class Code");
+				} else {
+					var newClass = classDb.doc(classCode);
+					newClass.get().then(function(doc) {
+						if(!doc.exists) {
+							window.alert("This class does not exist");
+						} else {
+							newClass.update({
+								students: firebase.firestore.FieldValue.arrayUnion(userId)
+							}).then(function() {
+								window.alert("Class Successfully Added")
+								window.location.reload();
+							});
+						}
+					});
+				}
+			}
+			// Log Out Function
+			function logOut() {
+				firebase.auth().signOut();
+			}
+		</script>
+	</body>
+</html>

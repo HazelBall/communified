@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+	<head>
+		<title>CommUnified - Sign Up</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/siimple@3.3.0/dist/siimple.min.css">
+		<style>
+			.siimple--px-5 {
+				background-color: white;
+			}
+			body {
+				background-color: #e0e0e0;
+			}
+			.com-button {
+				background-color: #2e7aea;
+				color: white;
+			}
+			.com-button:hover {
+				background-color: #3e8afa;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="siimple-content siimple-content--extra-small">
+        <div class="siimple--px-5 siimple--py-5">
+            <div class="siimple-h2 siimple--text-normal siimple--mb-1" align="center">
+                Create A CommUnified Account
+            </div>
+            <div class="siimple-field">
+                <div class="siimple-field-label">Your name</div>
+                <input id = "name" type="text" class="siimple-input siimple-input--fluid" placeholder="John Doe, Jane Doe, etc.">
+            </div>
+            <div class="siimple-field">
+                <div class="siimple-field-label">Your email</div>
+                <input id = "email" type="email" class="siimple-input siimple-input--fluid" placeholder="you@email.com">
+            </div>
+            <div class="siimple-field">
+                <div class="siimple-field-label">Your password</div>
+                <input id = "password" type="password" class="siimple-input siimple-input--fluid" placeholder="password">
+            </div>
+            <div class="siimple-field">
+                <div class="siimple-field-label">Retype your password</div>
+                <input id = "repassword" type="password" class="siimple-input siimple-input--fluid" placeholder="password">
+                <div class="siimple-field-helper">Your password must contain 8 or more characters.</div>
+            </div>
+            <div class="siimple-field">
+                <div id = "btnSignUp" class="siimple-btn siimple-btn--fluid siimple--text-bold com-button">
+                    Sign Up
+                </div>
+            </div>
+            <div class="siimple-card siimple--mt-5" align="center">
+                <div class="siimple-card-body">
+                    Already have an account? <a class="siimple-link" href = "signin.html">Sign In</a>.
+                </div>
+            </div>
+        </div>
+    </div>
+		<script src="https://www.gstatic.com/firebasejs/5.7.1/firebase.js"></script>
+		<script>
+		  // Initialize Firebase
+		  var config = {
+		    apiKey: "AIzaSyA74RowluDSPHcGfKclwIzbHGlrtYHVJ2k",
+		    authDomain: "communified-web.firebaseapp.com",
+		    databaseURL: "https://communified-web.firebaseio.com",
+		    projectId: "communified-web",
+		    storageBucket: "",
+		    messagingSenderId: "255197968272"
+		  };
+		  firebase.initializeApp(config);
+		  const firestore = firebase.firestore();
+  		const settings = {timestampsInSnapshots: true};
+  		firestore.settings(settings);
+		  var db = firebase.firestore();
+		  var userDb = db.collection('users');
+		  var userDoc = null;
+		  
+		  var button = document.getElementById('btnSignUp');
+		  var nameInput = document.getElementById('name');
+		  var emailInput = document.getElementById('email');
+		  var passInput = document.getElementById('password');
+		  var pass2Input = document.getElementById('repassword');
+		  var userId;
+		  button.addEventListener('click', e => {
+		  	var name = nameInput.value;
+		  	var email = emailInput.value;
+		  	var pass = passInput.value;
+		  	var pass2 = pass2Input.value;
+		  	if(pass == pass2) {
+		  		if(pass.length >= 6) {
+		  			firebase.auth().createUserWithEmailAndPassword(email, pass).then(function(user) {
+		  				
+		  			}).catch(error => {
+		  				console.log(error);
+		  			});
+		  		} else {
+		  			window.alert('Password must be at least 6 characters.')
+		  		}
+		  	} else {
+		  		window.alert('Passwords do not match.')
+		  	}
+		  });
+		  
+		  firebase.auth().onAuthStateChanged(firebaseUser => {
+		  	if(firebaseUser) {
+		  		userDoc = userDb.doc(firebaseUser.uid);
+		  		userDoc.get().then(function (doc) {
+		  			console.log(doc.exists)
+		  			if(!doc.exists) {
+		  				var newName = nameInput.value;
+		  				userDoc.set({
+		  					userName: newName,
+		  					userEmail: email.value,
+		  					userAvatar: null
+		  				}).then(function() {
+		  					window.location.href = "home.html"
+		  				});
+		  			}
+		  		});
+		  	} else {
+		  		console.log('not logged in');
+		  	}
+		  });
+		</script>
+	</body>
+</html>

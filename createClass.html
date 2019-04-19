@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+	<head>
+		<title>CommUnified - Home</title>
+		<link rel = "stylesheet" type = "text/css" href = "https://cdn.jsdelivr.net/gh/HunterBall/fresh.css@0.1.4/fresh.min.css">
+		<style>
+			:root {
+				--color-accent: #2e7aea;
+				--text-accent: #ffffff;
+			}
+		</style>
+	</head>
+	<body>
+		<div class = "nav side">
+			<a class = "title">Communified</a>
+			<a class = "item active displayName"></a>
+			<hr>
+			<a class = "item" href = "home.html">Dashboard</a>
+			<a class = "item" href = "user.html">Profile</a>
+			<a class = "item" href = "messages.html">Messages</a>
+			<hr>
+			<a class = "item" href = "" onclick = "logOut();">Log Out</a>
+		</div>
+		<div class = "main nav-side">
+			<div class = "header primary">
+				<h2>Create a Class</h2>
+			</div>
+			<div class = "container">
+				<p style = "color: red;" class = "error"></p>
+				<p>Title:</p>
+				<input style = "font-size: 16px;" type="text" class = "classTitle" placeholder = "Class Title"/>
+				<p>Description:</p>
+				<textarea rows = "4" cols = "50" maxlength = "200" class = "classDesc" placeholder = "A short description of the class, what it's about, grading, and anything else you want."></textarea><br>
+				<a class = "button" onclick = "createClass()">Create Class</a>
+			</div>
+		</div>
+		<script src="https://www.gstatic.com/firebasejs/5.7.1/firebase.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script>
+			// Initialize Firebase
+			var config = {
+				apiKey: "AIzaSyA74RowluDSPHcGfKclwIzbHGlrtYHVJ2k",
+				authDomain: "communified-web.firebaseapp.com",
+				databaseURL: "https://communified-web.firebaseio.com",
+				projectId: "communified-web",
+				storageBucket: "",
+				messagingSenderId: "255197968272"
+			};
+			firebase.initializeApp(config);
+			
+			var userName = null;
+			const db = firebase.firestore();
+			const settings = {timestampsInSnapshots: true};
+			db.settings(settings);
+			var userDb = db.collection('users');
+			var userDoc = null;
+			var userId = null;
+			var user = null;
+			
+			// Class Variables
+			var classDb = db.collection('classes');
+			
+			// Create Class
+			function createClass() {
+				console.log(user.emailVerified);
+				if(!user.emailVerified) {
+					$('.error').text('You must have a verified email address to create a class. Send a verification code on your ');
+					$('.error').append('<a href = "user.html">profile page</a>.');
+				} else {
+					console.log(userId);
+					classDb.add({
+						name : $('.classTitle').val(),
+						desc : $('.classDesc').val(),
+						teachers : firebase.firestore.FieldValue.arrayUnion(userId),
+						students : firebase.firestore.FieldValue.arrayUnion(userId)
+					}).then(function(doc) {
+						doc.update({
+							students : firebase.firestore.FieldValue.arrayRemove(userId)
+						})
+						window.location.href = "class.html?id=" + doc.id;
+					});
+				}
+			}
+			
+			// Auth State
+			firebase.auth().onAuthStateChanged(firebaseUser => {
+				if(firebaseUser) {
+					user = firebaseUser;
+					console.log(firebaseUser);
+					userDoc = userDb.doc(firebaseUser.uid);
+					userDoc.get().then(function(doc) {
+						if(doc) {
+							var data = doc.data();
+							userName = data.userName;
+							$('.displayName').text(userName);
+						}
+					});
+					userId = firebaseUser.uid;
+				} else {
+					window.location.href = "signup.html";
+				}
+			});
+			
+			// Log Out Function
+			function logOut() {
+				firebase.auth().signOut();
+			}
+		</script>
+	</body>
+</html>

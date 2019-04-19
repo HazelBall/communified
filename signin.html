@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+	<head>
+		<title>CommUnified - Sign In</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/siimple@3.3.0/dist/siimple.min.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<style>
+			.siimple--px-5 {
+				background-color: white;
+			}
+			body {
+				background-color: #e0e0e0;
+			}
+			.com-button {
+				background-color: #2e7aea;
+				color: white;
+			}
+			.com-button:hover {
+				background-color: #3e8afa;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="siimple-content siimple-content--extra-small">
+        <div class="siimple--px-5 siimple--py-5">
+            <div class="siimple-h2 siimple--text-normal siimple--mb-1" align="center">
+                Sign in to CommUnified
+            </div>
+            <div class="siimple-paragraph siimple-paragraph--lead" align="center">
+                Use your Email and Password
+            </div>
+            <div class="siimple-field">
+                <div class="siimple-field-label">Your email</div>
+                <input id = "logEmail" type="email" class="siimple-input siimple-input--fluid" placeholder="you@email.com">
+            </div>
+            <div class="siimple-field">
+                <div class="siimple-field-label">Your password</div>
+                <input id = "logPassword" type="password" class="siimple-input siimple-input--fluid" placeholder="password">
+                <div class="siimple-field-helper">Forgot password? <a href = "forgot.html" class = "siimple-link">Click here</a>.</div>
+            </div>
+            <div class="siimple-field">
+                <div id = "logIn" class="siimple-btn siimple-btn--fluid siimple--text-bold com-button">
+                    Sign In
+                </div>
+            </div>
+            <div class="siimple-card siimple--mt-5" align="center">
+                <div class="siimple-card-body">
+                    Don't have an account? <a class="siimple-link" href = "signup.html">Create One</a>.
+                </div>
+            </div>
+        </div>
+    </div>
+		<script src="https://www.gstatic.com/firebasejs/5.7.1/firebase.js"></script>
+		<script>
+			// Initialize Firebase
+		  var config = {
+		    apiKey: "AIzaSyA74RowluDSPHcGfKclwIzbHGlrtYHVJ2k",
+		    authDomain: "communified-web.firebaseapp.com",
+		    databaseURL: "https://communified-web.firebaseio.com",
+		    projectId: "communified-web",
+		    storageBucket: "",
+		    messagingSenderId: "255197968272"
+		  };
+		  firebase.initializeApp(config);
+		  var button = document.getElementById('logIn');
+		  var emailInput = document.getElementById('logEmail');
+		  var passInput = document.getElementById('logPassword');
+		  button.addEventListener('click', e => {
+		  	const email = emailInput.value;
+		  	const pass = passInput.value;
+		  	var promise = firebase.auth().signInWithEmailAndPassword(email, pass);
+		  	promise.catch(e => console.log(e.message));
+		  });
+		  firebase.auth().onAuthStateChanged(firebaseUser => {
+		  	if(firebaseUser) {
+		  		console.log(firebaseUser);
+		  		window.location.href = "home.html";
+		  	} else {
+		  		console.log('not logged in');
+		  	}
+		  });
+		</script>
+	</body>
+</html>

@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+	<head>
+		<title>CommUnified - Class</title>
+		<link rel = "stylesheet" type = "text/css" href = "https://cdn.jsdelivr.net/gh/HunterBall/fresh.css@0.1.4/fresh.min.css">
+		<link rel = "stylesheet" type = "text/css" href = "style.css">
+		<style>
+			:root {
+				--color-accent: #2e7aea;
+				--text-accent: #ffffff;
+			}
+			.card {
+				margin-top: 0;
+			}
+			.card + .card {
+				margin-top: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div class = "nav side">
+			<a class = "title">Communified</a>
+			<a class = "item active displayName"></a>
+			<hr>
+			<a class = "item" href = "home.html">Dashboard</a>
+			<a class = "item" href = "user.html">Profile</a>
+			<a class = "item" href = "messages.html">Messages</a>
+			<hr>
+			<a class = "item" href = "" onclick = "logOut();">Log Out</a>
+		</div>
+		<div class = "main nav-side">
+			<div class = "container">
+				<h2 class = "className"></h2>
+				<br>
+				<p>Code: <span class = "classCode"></span></p>
+				<h4>Students</h4>
+				<div class = "classStudents" style = "padding: 20px 0"></div>
+				<h4>Teachers</h4>
+				<div class = "classTeachers" style = "padding: 20px 0"></div>
+			</div>
+		</div>
+		<script src="https://www.gstatic.com/firebasejs/5.7.1/firebase.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script>
+			// Initialize Firebase
+			var config = {
+				apiKey: "AIzaSyA74RowluDSPHcGfKclwIzbHGlrtYHVJ2k",
+				authDomain: "communified-web.firebaseapp.com",
+				databaseURL: "https://communified-web.firebaseio.com",
+				projectId: "communified-web",
+				storageBucket: "",
+				messagingSenderId: "255197968272"
+			};
+			firebase.initializeApp(config);
+			
+			var userName = null;
+			const db = firebase.firestore();
+			const settings = {timestampsInSnapshots: true};
+			db.settings(settings);
+			var userDb = db.collection('users');
+			var userDoc = null;
+			var userId = null;
+			// Class Variables
+			var classDb = db.collection('classes');
+			var classDoc = null;
+			var classId = null;
+			var className = null;
+			var classDescription = null;
+			var classStudents = null;
+			var classTeachers = null;
+			var classData = null;
+			var classD = null;
+			
+			// Auth State
+			firebase.auth().onAuthStateChanged(firebaseUser => {
+				if(firebaseUser) {
+					console.log(firebaseUser);
+					userDoc = userDb.doc(firebaseUser.uid);
+					userDoc.get().then(function(doc) {
+						if(doc) {
+							var data = doc.data();
+							userName = data.userName;
+							$('.displayName').text(userName);
+						}
+					});
+					userId = firebaseUser.uid;
+					getClass();
+				} else {
+					window.location.href = "signup.html";
+				}
+			});
+			
+			// Get Classes
+			function getClass() {
+				var urlParams = new URLSearchParams(window.location.search);
+				classId = urlParams.get("id");
+				console.log(classId);
+				console.log(urlParams);
+				if(classId == null) {
+					window.location.href = "home.html";
+				}
+				classDoc = classDb.doc(classId);
+				classDoc.get().then(function (doc) {
+					if(doc) {
+						classD = doc;
+						console.log(doc.data());
+						classData = doc.data();
+						className = classData.name;
+						classDescription = classData.desc;
+						classStudents = classData.students;
+						classTeachers = classData.teachers;
+						changeWeb();
+					}
+				});
+			}
+			function changeWeb() {
+				$('.classCode').text(classD.id);
+				$('.className').text(className);
+				$('.classDesc').text(classDescription);
+				console.log(classStudents);
+				for(var i = 0; i < classStudents.length; i ++) {
+					var studentDoc = userDb.doc(classStudents[i]);
+					var studentName;
+					studentDoc.get().then(function(doc) {
+						if(doc) {
+							var data = doc.data();
+							studentName = data.userName;
+							var newObj = '<div class = "card clickable third left"><div class = "content"><p>' + studentName + '</p><a class = "clicker" href = "user.html?id='+ doc.id + '"></a></div></div>';
+							$('.classStudents').append(newObj);
+						}
+					});
+				}
+				for(var i = 0; i < classTeachers.length; i ++) {
+					var teacherDoc = userDb.doc(classTeachers[i]);
+					var teacherName;
+					teacherDoc.get().then(function(doc) {
+						if(doc) {
+							var data = doc.data();
+							teacherName = data.userName;
+							var newObj = '<div class = "card clickable third left"><div class = "content"><p>' + teacherName + '</p><a class = "clicker" href = "user.html?id='+ doc.id + '"></a></div></div>';
+							$('.classTeachers').append(newObj);
+						}
+					});
+				}
+			}
+			// Log Out Function
+			function logOut() {
+				firebase.auth().signOut();
+			}
+		</script>
+	</body>
+</html>
